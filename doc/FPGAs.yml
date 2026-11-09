@@ -36,6 +36,7 @@ Efinix:
     Model:
       - T8
       - T13
+      - T120
     URL: https://www.efinixinc.com/products-trion.html
     Memory: NA
     Flash: OK
@@ -76,6 +77,7 @@ Gowin:
     Model:
      - GW5A-25
      - GW5AST-138
+     - GW5AT-15
      - GW5AT-60
      - GW5AT-138
     URL: https://www.gowinsemi.com/en/product/detail/60/
@@ -83,7 +85,7 @@ Gowin:
     Flash: EF
 
 
-Intel:
+Altera:
 
   - Description: Max II(CPLD)
     Model: EPM240T100C5N
@@ -154,9 +156,26 @@ Intel:
     Model: 
       - 10M02
       - 10M08
+      - 10M16
+      - 10M25
+      - 10M50
     URL: https://www.intel.fr/content/www/fr/fr/products/details/fpga/max/10.html
     Memory: SVF
     Flash: POF
+
+  - Description: Agilex 3
+    Model:
+      - A3CZ135
+    URL: https://www.altera.com/products/fpga/agilex/3
+    Memory: RBF
+    Flash: NT
+
+  - Description: Agilex 5
+    Model:
+      - A5EC008B
+    URL: https://www.altera.com/products/fpga/agilex/5
+    Memory: RBF
+    Flash: NT
 
 
 Lattice:
@@ -183,7 +202,7 @@ Lattice:
     Model: LFE3-70E
     URL: https://www.latticesemi.com/Products/FPGAandCPLD/LatticeECP3
     Memory: OK
-    Flash: TBD
+    Flash: OK
 
   - Description: ECP5
     Model:
@@ -308,6 +327,22 @@ Xilinx:
     Memory: OK
     Flash: OK (primary)
 
+  - Description: Kintex UltraScale+
+    Model:
+      - xcku3p
+      - xcku5p
+    URL: https://www.xilinx.com/products/silicon-devices/fpga/kintex-ultrascale-plus.html#productTable
+    Memory: OK
+    Flash: OK
+
+  - Description: Kria
+    Model:
+      - xck24
+      - xck26
+    URL: https://docs.amd.com/v/u/en-US/kria-som-psg
+    Memory: OK
+    Flash: NA
+
   - Description: Virtex 6
     Model:
       - xc6vlx130t
@@ -328,6 +363,13 @@ Xilinx:
     URL: https://www.xilinx.com/products/silicon-devices/fpga/virtex-ultrascale-plus.html#productTable
     Memory: OK
     Flash: OK
+
+  - Description: Spartan UltraScale+
+    Model:
+      - xcsu35p
+    URL: https://www.amd.com/en/products/adaptive-socs-and-fpgas/fpga/spartan-ultrascale-plus.html#productTable
+    Memory: OK
+    Flash: TBD
 
   - Description: Spartan 3
     Model:

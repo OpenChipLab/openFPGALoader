@@ -12,12 +12,18 @@
 #include <vector>
 #include <string>
 
+#ifdef ENABLE_ANLOGIC_CABLE
 #include "anlogicCable.hpp"
+#endif
+#ifdef USE_LIBFTDI
 #include "ch552_jtag.hpp"
+#endif
 #include "display.hpp"
 #include "jtag.hpp"
+#ifdef USE_LIBFTDI
 #include "ftdiJtagBitbang.hpp"
 #include "ftdiJtagMPSSE.hpp"
+#endif
 #ifdef ENABLE_GOWIN_GWU2X
 #include "gwu2x_jtag.hpp"
 #endif
@@ -27,23 +33,35 @@
 #ifdef ENABLE_JETSONNANOGPIO
 #include "jetsonNanoJtagBitbang.hpp"
 #endif
+#ifdef ENABLE_JLINK
 #include "jlink.hpp"
+#endif
 #ifdef ENABLE_CMSISDAP
 #include "cmsisDAP.hpp"
 #endif
+#ifdef ENABLE_DIRTYJTAG
 #include "dirtyJtag.hpp"
+#endif
+#ifdef ENABLE_ESP_USB
 #include "esp_usb_jtag.hpp"
+#endif
+#ifdef ENABLE_CH347
 #include "ch347jtag.hpp"
+#endif
 #include "part.hpp"
 #ifdef ENABLE_REMOTEBITBANG
 #include "remoteBitbang_client.hpp"
 #endif
+#ifdef ENABLE_USBBLASTER
 #include "usbBlaster.hpp"
-#ifdef ENABLE_XVC
+#endif
+#ifdef ENABLE_XVC_CLIENT
 #include "xvc_client.hpp"
 #endif
+#ifdef ENABLE_XILINX_PLATFORM_CABLE_USB
+#include "xilinxPlatformCableUSB.hpp"
+#endif
 
-using namespace std;
 
 #define DEBUG 0
 
@@ -78,10 +96,10 @@ using namespace std;
  */
 
 Jtag::Jtag(const cable_t &cable, const jtag_pins_conf_t *pin_conf,
-			const string &dev,
-			const string &serial, uint32_t clkHZ, int8_t verbose,
-			const string &ip_adr, int port,
-			const bool invert_read_edge, const string &firmware_path,
+			const std::string &dev,
+			const std::string &serial, uint32_t clkHZ, int8_t verbose,
+			const std::string &ip_adr, int port,
+			const bool invert_read_edge, const std::string &firmware_path,
 			const std::map<uint32_t, misc_device> &user_misc_devs):
 			_verbose(verbose > 1),
 			_state(RUN_TEST_IDLE),
@@ -92,8 +110,14 @@ Jtag::Jtag(const cable_t &cable, const jtag_pins_conf_t *pin_conf,
 {
 	switch (cable.type) {
 	case MODE_ANLOGICCABLE:
+#ifdef ENABLE_ANLOGIC_CABLE
 		_jtag = new AnlogicCable(clkHZ);
+#else
+		std::cerr << "Jtag: support for Anlogic cable was not enabled at compile time" << std::endl;
+		throw std::exception();
+#endif
 		break;
+#ifdef USE_LIBFTDI
 	case MODE_FTDI_BITBANG:
 		if (pin_conf == NULL)
 			throw std::exception();
@@ -106,39 +130,66 @@ Jtag::Jtag(const cable_t &cable, const jtag_pins_conf_t *pin_conf,
 	case MODE_CH552_JTAG:
 		_jtag = new CH552_jtag(cable, dev, serial, clkHZ, verbose);
 		break;
+#endif
 	case MODE_CH347:
+#ifdef ENABLE_CH347
 		_jtag = new CH347Jtag(clkHZ, verbose, cable.vid, cable.pid, cable.bus_addr, cable.device_addr);
+#else
+		std::cerr << "Jtag: support for CH347 cable was not enabled at compile time" << std::endl;
+		throw std::exception();
+#endif
 		break;
 	case MODE_DIRTYJTAG:
-		_jtag = new DirtyJtag(clkHZ, verbose);
+#ifdef ENABLE_DIRTYJTAG
+		_jtag = new DirtyJtag(clkHZ, verbose, cable.vid, cable.pid);
+#else
+		std::cerr << "Jtag: support for dirtyJtag cable was not enabled at compile time" << std::endl;
+		throw std::exception();
+#endif
 		break;
-#ifdef ENABLE_GOWIN_GWU2X
 	case MODE_GWU2X:
+#ifdef ENABLE_GOWIN_GWU2X
 		_jtag = new GowinGWU2x((cable_t *)&cable, clkHZ, verbose);
-		break;
 #else
 		std::cerr << "Jtag: support for Gowin GWU2X was not enabled at compile time" << std::endl;
 		throw std::exception();
 #endif
+		break;
 	case MODE_JLINK:
+#ifdef ENABLE_JLINK
 		_jtag = new Jlink(clkHZ, verbose, cable.vid, cable.pid);
+#else
+		std::cerr << "Jtag: support for JLink cable was not enabled at compile time" << std::endl;
+		throw std::exception();
+#endif
 		break;
 	case MODE_ESP:
-		_jtag = new esp_usb_jtag(clkHZ, verbose, 0x303a, 0x1001);
+#ifdef ENABLE_ESP_USB
+		_jtag = new esp_usb_jtag(clkHZ, verbose, 0x303a, 0x1001,
+			cable.bus_addr, cable.device_addr, serial);
+#else
+		std::cerr << "Jtag: support for esp32s3 cable was not enabled at compile time" << std::endl;
+		throw std::exception();
+#endif
 		break;
 	case MODE_USBBLASTER:
+#ifdef ENABLE_USBBLASTER
 		_jtag = new UsbBlaster(cable, firmware_path, verbose);
 		break;
+#else
+		std::cerr << "Jtag: support for usb-blaster was not enabled at compile time" << std::endl;
+		throw std::exception();
+#endif
 	case MODE_CMSISDAP:
 #ifdef ENABLE_CMSISDAP
-		_jtag = new CmsisDAP(cable, cable.config.index, verbose);
+		_jtag = new CmsisDAP(cable, cable.config.index, clkHZ, verbose);
 		break;
 #else
 		std::cerr << "Jtag: support for cmsisdap was not enabled at compile time" << std::endl;
 		throw std::exception();
 #endif
 	case MODE_XVC_CLIENT:
-#ifdef ENABLE_XVC
+#ifdef ENABLE_XVC_CLIENT
 		_jtag = new XVC_client(ip_adr, port, clkHZ, verbose);
 		break;
 #else
@@ -159,6 +210,15 @@ Jtag::Jtag(const cable_t &cable, const jtag_pins_conf_t *pin_conf,
 	case MODE_REMOTEBITBANG:
 		_jtag = new RemoteBitbang_client(ip_adr, port, verbose);
 		break;
+#endif
+	case MODE_XPCU:
+#ifdef ENABLE_XILINX_PLATFORM_CABLE_USB
+		_jtag = new XilinxPlatformCableUSB(cable.vid, cable.pid, clkHZ,
+			firmware_path, verbose);
+		break;
+#else
+		printError("Jtag: support for Xilinx Platform Cable USB (XPCU) was not enabled at compile time");
+		throw std::exception();
 #endif
 	default:
 		std::cerr << "Jtag: unknown cable type" << std::endl;
@@ -296,7 +356,7 @@ int Jtag::device_select(unsigned index)
 	 * after the selected one
 	 */
 	_dr_bits_after = device_index;
-	_dr_bits = vector<uint8_t>((std::max(_dr_bits_after, _dr_bits_before) + 7)/8, 0);
+	_dr_bits = std::vector<uint8_t>((std::max(_dr_bits_after, _dr_bits_before) + 7)/8, 0);
 
 	/* when the device is not alone and not
 	 * the first a serie of bypass must be
@@ -313,7 +373,7 @@ int Jtag::device_select(unsigned index)
 	_ir_bits_before = 0;
 	for (unsigned i = device_index + 1; i < _devices_list.size(); ++i)
 		_ir_bits_before += _irlength_list[i];
-	_ir_bits = vector<uint8_t>((std::max(_ir_bits_before, _ir_bits_after) + 7) / 8, 0xff); // BYPASS command is all-ones
+	_ir_bits = std::vector<uint8_t>((std::max(_ir_bits_before, _ir_bits_after) + 7) / 8, 0xff); // BYPASS command is all-ones
 
 	return device_index;
 }
@@ -418,7 +478,7 @@ int Jtag::shiftDR(const uint8_t *tdi, unsigned char *tdo, int drlen, tapState_t 
 int Jtag::shiftIR(unsigned char tdi, int irlen, tapState_t end_state)
 {
 	if (irlen > 8) {
-		cerr << "Error: this method this direct char don't support more than 1 byte" << endl;
+		std::cerr << "Error: this method this direct char don't support more than 1 byte" << std::endl;
 		return -1;
 	}
 	return shiftIR(&tdi, NULL, irlen, end_state);

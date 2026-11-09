@@ -7,14 +7,14 @@
 #include <vector>
 
 #include "display.hpp"
-#include "spiInterface.hpp"
+#include "flashInterface.hpp"
 #include "spiFlash.hpp"
 
-SPIInterface::SPIInterface():_spif_verbose(0), _spif_rd_burst(0),
+FlashInterface::FlashInterface():_spif_verbose(0), _spif_rd_burst(0),
 	_spif_verify(false), _skip_load_bridge(false)
 {}
 
-SPIInterface::SPIInterface(const std::string &filename, int8_t verbose,
+FlashInterface::FlashInterface(const std::string &filename, int8_t verbose,
 		uint32_t rd_burst, bool verify, bool skip_load_bridge,
 		bool skip_reset):
 	_spif_verbose(verbose), _spif_rd_burst(rd_burst),
@@ -23,7 +23,7 @@ SPIInterface::SPIInterface(const std::string &filename, int8_t verbose,
 {}
 
 /* spiFlash generic acces */
-bool SPIInterface::detect_flash()
+bool FlashInterface::detect_flash()
 {
 	bool ret = true;
 
@@ -53,7 +53,7 @@ bool SPIInterface::detect_flash()
 	return post_flash_access() && ret;
 }
 
-bool SPIInterface::protect_flash(uint32_t len)
+bool FlashInterface::protect_flash(uint32_t len)
 {
 	bool ret = true;
 	printInfo("protect_flash:");
@@ -84,7 +84,7 @@ bool SPIInterface::protect_flash(uint32_t len)
 	return post_flash_access() && ret;
 }
 
-bool SPIInterface::unprotect_flash()
+bool FlashInterface::unprotect_flash()
 {
 	bool ret = true;
 
@@ -115,7 +115,7 @@ bool SPIInterface::unprotect_flash()
 	return post_flash_access() && ret;
 }
 
-bool SPIInterface::set_quad_bit(bool set_quad)
+bool FlashInterface::set_quad_bit(bool set_quad)
 {
 	bool ret = true;
 
@@ -146,7 +146,7 @@ bool SPIInterface::set_quad_bit(bool set_quad)
 	return post_flash_access() && ret;
 }
 
-bool SPIInterface::bulk_erase_flash()
+bool FlashInterface::bulk_erase_flash()
 {
 	bool ret = true;
 	printInfo("bulk_erase:");
@@ -177,7 +177,32 @@ bool SPIInterface::bulk_erase_flash()
 	return post_flash_access() && ret;
 }
 
-bool SPIInterface::write(uint32_t offset, const uint8_t *data, uint32_t len,
+bool FlashInterface::write(const std::vector<FlashDataSection>&sections,
+		bool unprotect_flash, bool full_erase)
+{
+	bool ret = true;
+	if (!prepare_flash_access())
+		return false;
+
+	/* test SPI */
+	try {
+		SPIFlash flash(this, unprotect_flash, _spif_verbose);
+		flash.read_status_reg();
+		if (!flash.erase_and_prog(sections, full_erase))
+			ret = false;
+		if (_spif_verify && ret)
+			printInfo("Verify not supported in this mode");
+			//ret = flash.verify(offset, data, len, _spif_rd_burst);
+	} catch (std::exception &e) {
+		printError(e.what());
+		ret = false;
+	}
+
+	bool ret2 = post_flash_access();
+	return ret && ret2;
+}
+
+bool FlashInterface::write(uint32_t offset, const uint8_t *data, uint32_t len,
 		bool unprotect_flash)
 {
 	bool ret = true;
@@ -187,6 +212,7 @@ bool SPIInterface::write(uint32_t offset, const uint8_t *data, uint32_t len,
 	/* test SPI */
 	try {
 		SPIFlash flash(this, unprotect_flash, _spif_verbose);
+		restore_flash_access_frequency();
 		flash.read_status_reg();
 		if (flash.erase_and_prog(offset, data, len) == -1)
 			ret = false;
@@ -201,7 +227,7 @@ bool SPIInterface::write(uint32_t offset, const uint8_t *data, uint32_t len,
 	return ret && ret2;
 }
 
-bool SPIInterface::read(uint8_t *data, uint32_t base_addr, uint32_t len)
+bool FlashInterface::read(uint8_t *data, uint32_t base_addr, uint32_t len)
 {
 	bool ret = true;
 	/* enable SPI flash access */
@@ -220,7 +246,7 @@ bool SPIInterface::read(uint8_t *data, uint32_t base_addr, uint32_t len)
 	return post_flash_access() && ret == 0;
 }
 
-bool SPIInterface::dump(uint32_t base_addr, uint32_t len)
+bool FlashInterface::dump(uint32_t base_addr, uint32_t len)
 {
 	bool ret = true;
 	/* enable SPI flash access */

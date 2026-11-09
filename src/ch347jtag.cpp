@@ -202,6 +202,7 @@ int CH347Jtag::setClk(const uint8_t &factor) {
 	obuf[0] = CMD_CLK;
 	obuf[1] = 6;
 	obuf[4] = factor;
+	obuf[5] = 0xAB; //Enable Faster Version
 	unsigned actual = 0;
 	int rv = usb_xfer(9, 4, &actual, false);
 	if (rv || actual != 4)
@@ -317,9 +318,9 @@ CH347Jtag::CH347Jtag(uint32_t clkHZ, int8_t verbose, int vid, int pid, uint8_t b
 		goto usb_exit;
 	}
 	if (pid == CH347F_JTAG_PID) {
-		interface = CH347F_JTAG_INTF;
+		interface = CH347T_JTAG_INTF;
 	} else {
-		interface = CH347T_JTAG_INTF
+		interface = CH347F_JTAG_INTF
 	}
 	if (libusb_claim_interface(dev_handle, interface)) {
 		printError("libusb error while claiming CH347JTAG interface");

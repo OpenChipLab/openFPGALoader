@@ -16,7 +16,7 @@
 #include "display.hpp"
 #include "spiFlash.hpp"
 #include "spiFlashdb.hpp"
-#include "spiInterface.hpp"
+#include "flashInterface.hpp"
 
 /* read/write status register : 0B addr + 0 dummy */
 #define FLASH_WRSR     0x01
@@ -84,38 +84,65 @@
 /* Global Block Protection unlock */
 #define FLASH_ULBPR 0x98
 
-SPIFlash::SPIFlash(SPIInterface *spi, bool unprotect, int8_t verbose):
+SPIFlash::SPIFlash(FlashInterface *spi, bool unprotect, int8_t verbose):
 	_spi(spi), _verbose(verbose), _jedec_id(0),
-	_flash_model(NULL), _unprotect(unprotect)
+	_flash_model(NULL), _unprotect(unprotect), _must_relock(false),
+	_status(0)
 {
 	reset();
 	power_up();
 	read_id();
 }
 
-int SPIFlash::bulk_erase()
+int SPIFlash::bulk_erase(bool verbose, bool skip_bp_check)
 {
-	int ret, ret2 = 0;
-	uint32_t timeout=1000000;
-	uint8_t bp = get_bp();
-	if (bp != 0) {
-		if (!_unprotect) {
-			printError("Error: Can't erase flash: block protection is set");
-			printError("       can't unlock without --unprotect-flash");
-			return -1;
+	int ret = 0, ret2 = 0;
+	uint8_t bp = 0;
+    // timeout my be selected on flash size 
+	uint32_t timeout=2000000;
+	if (!skip_bp_check) {
+		if (verbose)
+			printInfo("Check Flash Protection: ", false);
+		bp = get_bp();
+		if (bp != 0) {
+			if (!_unprotect) {
+				printError("FAIL");
+				printError("Error: Can't erase flash: block protection is set");
+				printError("       can't unlock without --unprotect-flash");
+				return -1;
+			}
+
+			ret = disable_protection();
 		}
 
-		if ((ret = disable_protection()) != 0)
+		if (verbose) {
+			if (ret == 0)
+				printSuccess("DONE");
+			else
+				printError("FAIL");
+		}
+
+		if (ret != 0)
 			return ret;
 	}
 
-	if ((ret = write_enable()) != 0)
+	if (verbose)
+		printInfo("Bulk erase: ", false);
+	if ((ret = write_enable()) != 0) {
+		printError("FAIL");
 		return ret;
+	}
 	ret2 = _spi->spi_put(FLASH_CE, NULL, NULL, 0);
 	if (ret2 == 0)
 		ret2 = _spi->spi_wait(FLASH_RDSR, FLASH_RDSR_WIP, 0x00, timeout);
+	if (verbose) {
+		if (ret2 == 0)
+			printSuccess("DONE");
+		else
+			printError("FAIL");
+	}
 
-	if (bp != 0)
+	if (!skip_bp_check && (bp != 0))
 		ret = enable_protection(bp);
 
 	return ret | ret2;
@@ -340,23 +367,23 @@ bool SPIFlash::dump(const std::string &filename, const int &base_addr,
 	return true;
 }
 
-int SPIFlash::erase_and_prog(int base_addr, const uint8_t *data, int len)
+bool SPIFlash::prepare_flash(const int base_addr, const int len)
 {
+	/* If flash not already detected: do that here */
 	if (_jedec_id == 0) {
 		try {
 			read_id();
 		} catch(std::exception &e) {
 			printError(e.what());
-			return -1;
+			return false;
 		}
 	}
 
-	bool must_relock = false;  // used to relock after write;
-
 	/* check Block Protect Bits (hide WIP/WEN bits) */
-	uint8_t status = read_status_reg() & ~0x03;
+	_status = read_status_reg() & ~0x03;
 	if (_verbose > 0)
-		display_status_reg(status);
+		display_status_reg(_status);
+
 	/* if known chip */
 	if (_flash_model) {
 		/* microchip SST26VF032B/64B have global lock set
@@ -365,23 +392,23 @@ int SPIFlash::erase_and_prog(int base_addr, const uint8_t *data, int len)
 		 */
 		if (_flash_model->global_lock) {
 			if (!global_unlock())
-				return -1;
+				return false;
 		}
 
 		/* check if offset + len fit in flash */
 		if ((unsigned int)(base_addr + len) > (_flash_model->nr_sector * 0x10000)) {
 			printError("flash overflow");
-			return -1;
+			return false;
 		}
 		// if device has block protect
 		if (_flash_model->bp_len != 0) {
 			/* compute protected area */
 			int8_t tb = get_tb();
 			if (tb == -1)
-				return -1;
-			std::map<std::string, uint32_t> lock_len = bp_to_len(status, tb);
+				return false;
+			std::map<std::string, uint32_t> lock_len = bp_to_len(_status, tb);
 			printf("%08x %08x %08x %02x\n", base_addr,
-					lock_len["start"], lock_len["end"], status);
+					lock_len["start"], lock_len["end"], _status);
 
 			/* if some blocks are locked */
 			if (lock_len["start"] != 0 || lock_len["end"] != 0) {
@@ -389,47 +416,118 @@ int SPIFlash::erase_and_prog(int base_addr, const uint8_t *data, int len)
 				if (tb == 1) {  // bottom blocks are protected
 								// check if start is in protected blocks
 					if ((uint32_t)base_addr <= lock_len["end"])
-						must_relock = true;
+						_must_relock = true;
 				} else {  // top blocks
 					if ((uint32_t)(base_addr + len) >= lock_len["start"])
-						must_relock = true;
+						_must_relock = true;
 				}
 			}
+			const uint32_t jedec = _jedec_id >> 8;
 			/* ISSI IS25LP032 seems have a bug:
 			 * block protection is always in top mode regardless of
 			 * the TB bit: if write is not at offset 0 -> force unlock
 			 */
-			if ((_jedec_id >> 8) == 0x9d6016 && tb == 1 && base_addr != 0) {
+			if (jedec == 0x9d6016 && tb == 1 && base_addr != 0) {
 				_unprotect = true;
-				must_relock = true;
+				_must_relock = true;
 			}
-			/* ST M25P16 has not TB bit:
+			/* ST M25P16 / MX25L6045 have not TB bit:
 			 * block protection is always in top mode:
 			 * if write is not at offset 0 -> force unlock
 			 */
-			if ((_jedec_id >> 8) == 0x202015 && tb == 1 && base_addr != 0) {
+			if (((jedec == 0x202015) || (jedec == 0xC22017))
+				&& tb == 1 && base_addr != 0) {
 				_unprotect = true;
-				must_relock = true;
+				_must_relock = true;
 			}
 		}
 	} else {  // unknown chip: basic test
 		printWarn("flash chip unknown: use basic protection detection");
 		if (get_bp() != 0)
-			must_relock = true;
+			_must_relock = true;
 	}
 
-	/* if it's needs to unlock */
-	if (must_relock) {
+	/* if it's needs to unlock... */
+	/* Checks if unlock is asked/allowed by the user */
+	if (_must_relock) {
 		printf("unlock blocks\n");
 		if (!_unprotect) {
 			printError("Error: block protection is set");
 			printError("       can't unlock without --unprotect-flash");
-			return -1;
+			return false;
 		} else  {
 			if (disable_protection() != 0)
-				return -1;
+				return false;
 		}
 	}
+
+	return true;
+}
+
+bool SPIFlash::erase_and_prog(const std::vector<FlashDataSection> &sections, bool full_erase)
+{
+	uint32_t len = 0, flash_len;
+	uint32_t base_addr = 0;
+	/* For full erase and to check BP: consider the full flash size */
+	if (_flash_model && full_erase) {
+		flash_len = _flash_model->nr_sector * 0x10000;
+	} else { /* not a full erase: consider bottom base_addr and upper address */
+		full_erase = false;
+		base_addr = sections.front().getStartAddr();
+		flash_len = sections.back().getCurrentAddr() - base_addr;
+	}
+
+	/* Compute real length to be written */
+	for (const FlashDataSection &sec: sections)
+		len += sec.getLength();
+
+	/* Sanity check / disables protection */
+	if (!prepare_flash(base_addr, flash_len))
+		return false;
+
+	/* instead of sector erase => perform a full flash erase */
+	if (full_erase) {
+		if (bulk_erase(true, true) == -1)
+			return false;
+	} else {
+		printInfo("Erase Flash: ", false);
+		if (sectors_erase(base_addr, len) == -1)
+			return false;
+	}
+
+	ProgressBar progress("Writing", len, 50, _verbose < 0);
+	uint32_t len_done = 0;
+	for (const FlashDataSection &sec: sections) {
+		int size = 0;
+		/* prepare section write */
+		const uint32_t base_addr = sec.getStartAddr(); // start address
+		const uint32_t sec_len = sec.getLength(); // section length
+		const uint8_t *ptr = sec.getRecord().data(); // data
+		for (uint32_t addr = 0; addr < sec_len; addr += size, ptr+=size, len_done+=size) {
+			size = (addr + 256 > sec_len) ? (sec_len - addr) : 256;
+			if ((_jedec_id >> 8) == 0xbf258d) {
+				size = 1;
+			}
+			if (write_page(base_addr + addr, ptr, size) == -1)
+				return false;
+			progress.display(len_done);
+		}
+	}
+	progress.done();
+
+	/* and if required: relock blocks */
+	if (_must_relock) {
+		enable_protection(_status);
+		if (_verbose > 0)
+			display_status_reg(read_status_reg());
+	}
+	return true;
+}
+
+int SPIFlash::erase_and_prog(int base_addr, const uint8_t *data, int len)
+{
+	if (!prepare_flash(base_addr, len))
+		return -1;
 
 	/* Now we can erase sector and write new data */
 	ProgressBar progress("Writing", len, 50, _verbose < 0);
@@ -450,8 +548,8 @@ int SPIFlash::erase_and_prog(int base_addr, const uint8_t *data, int len)
 	progress.done();
 
 	/* and if required: relock blocks */
-	if (must_relock) {
-		enable_protection(status);
+	if (_must_relock) {
+		enable_protection(_status);
 		if (_verbose > 0)
 			display_status_reg(read_status_reg());
 	}

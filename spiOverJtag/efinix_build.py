@@ -52,6 +52,9 @@ efinix_pinout = {
         "J484": { # ti180, ...
             "ss_n": "E2", "cclk": "J2", "cdi0": "G2", "cdi1": "H2", "cdi2": "F3", "cdi3": "G3",
         },
+        "N484": { # ti375
+            "ss_n": "C1", "cclk": "G4", "cdi0": "J4", "cdi1": "J5", "cdi2": "G3", "cdi3": "C2",
+        },
     },
 }
 
@@ -59,6 +62,8 @@ timing_models = {
     "T8F81": "C2",
     "T13F256": "C3",
     "TI180J484": "C3",
+    "TI375N484": "C3",
+    "T120F324": "C4",
 }
 
 def gen_isf_constr(gateware_name, build_path, device_name, family, pkg):
@@ -66,13 +71,23 @@ def gen_isf_constr(gateware_name, build_path, device_name, family, pkg):
     # Basic settings
     isf_array = [
         "# Device setting",
-        "design.set_device_property(\"1A\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
-        "design.set_device_property(\"1B\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
-        "design.set_device_property(\"1C\",\"VOLTAGE\",\"1.1\",\"IOBANK\")",
-        "design.set_device_property(\"2A\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
-        "design.set_device_property(\"2B\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
-        "",
     ]
+
+    if pkg == "F324":
+        # F324 package has 1A and merged 1B_1C IOBank
+        isf_array.extend([
+            "design.set_device_property(\"1A\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
+            "design.set_device_property(\"1B_1C\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
+        ])
+    else:
+        isf_array.extend([
+            "design.set_device_property(\"1A\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
+            "design.set_device_property(\"1B\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
+            "design.set_device_property(\"1C\",\"VOLTAGE\",\"1.1\",\"IOBANK\")",
+            "design.set_device_property(\"2A\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
+            "design.set_device_property(\"2B\",\"VOLTAGE\",\"3.3\",\"IOBANK\")",
+        ])
+    isf_array.append("")
 
     # JTAG settings
     isf_array.append("# ---------- JTAG 1 ---------")

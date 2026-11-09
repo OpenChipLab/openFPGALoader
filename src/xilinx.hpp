@@ -7,22 +7,25 @@
 #define SRC_XILINX_HPP_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "bpiFlash.hpp"
 #include "configBitstreamParser.hpp"
 #include "device.hpp"
 #include "jedParser.hpp"
 #include "jtag.hpp"
-#include "spiInterface.hpp"
+#include "flashInterface.hpp"
 
-class Xilinx: public Device, SPIInterface {
+class Xilinx: public Device, FlashInterface {
 	public:
 		Xilinx(Jtag *jtag, const std::string &filename,
 				const std::string &secondary_filename,
 				const std::string &file_type,
 				Device::prog_type_t prg_type,
 				const std::string &device_package,
+				const bool spi_flash_type,
 				const std::string &spiOverJtagPath,
 				const std::string &target_flash,
 				bool verify, int8_t verbose,
@@ -31,10 +34,12 @@ class Xilinx: public Device, SPIInterface {
 		~Xilinx();
 
 		void program(unsigned int offset, bool unprotect_flash) override;
-		void program_spi(ConfigBitstreamParser * bit, unsigned int offset,
-				bool unprotect_flash);
+		void program_spi(ConfigBitstreamParser * bit, std::string extention,
+			unsigned int offset, bool unprotect_flash);
+		void program_bpi(ConfigBitstreamParser * bit, unsigned int offset);
 		void program_mem(ConfigBitstreamParser *bitfile);
 		bool dumpFlash(uint32_t base_addr, uint32_t len) override;
+		bool dumpFlash_bpi(uint32_t base_addr, uint32_t len);
 
 		bool read_register(const std::string reg_name) override {
 			displayRegister(reg_name, dumpRegister(reg_name));
@@ -198,6 +203,7 @@ class Xilinx: public Device, SPIInterface {
 			ZYNQMP_FAMILY,
 			XCF_FAMILY,
 			ARTIXUSP_FAMILY,
+			SPARTANUSP_FAMILY,
 			VIRTEXUS_FAMILY,
 			VIRTEXUSP_FAMILY,
 			UNKNOWN_FAMILY  = 999
@@ -218,6 +224,17 @@ class Xilinx: public Device, SPIInterface {
 		 * 	\return false if missing device mode, true otherwise
 		 */
 		bool load_bridge();
+
+		/*!
+		 * \brief load BPI flash bridge for parallel NOR flash access
+		 * \return false if failed, true otherwise
+		 */
+		bool load_bpi_bridge();
+
+		/*!
+		 * \brief check if board uses BPI flash
+		 */
+		bool is_bpi_board() const { return _is_bpi_board; }
 
 		/*!
 		 * \brief read SpiOverJtag version to select between v1 and v2
@@ -261,6 +278,8 @@ class Xilinx: public Device, SPIInterface {
 		std::string _user_instruction; /* which USER bscan instruction to interface with SPI */
 		bool _soj_is_v2; /* SpiOverJtag version (1.0 or 2.0) */
 		uint32_t _jtag_chain_len; /* Jtag Chain Length */
+		bool _is_bpi_board; /* true if board uses BPI parallel flash */
+		std::unique_ptr<BPIFlash> _bpi_flash; /* BPI flash instance */
 };
 
 #endif  // SRC_XILINX_HPP_

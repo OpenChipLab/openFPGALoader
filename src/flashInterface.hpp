@@ -3,8 +3,8 @@
  * Copyright (C) 2020 Gwenhael Goavec-Merou <gwenhael.goavec-merou@trabucayre.com>
  */
 
-#ifndef SRC_SPIINTERFACE_HPP_
-#define SRC_SPIINTERFACE_HPP_
+#ifndef SRC_FLASHINTERFACE_HPP_
+#define SRC_FLASHINTERFACE_HPP_
 
 #include <cstdint>
 #include <iostream>
@@ -12,19 +12,21 @@
 #include <vector>
 
 /*!
- * \file SPIInterface.hpp
- * \class SPIInterface
+ * \file FlashInterface.hpp
+ * \class FlashInterface
  * \brief abstract class between spi implementation and converters
  * \author Gwenhael Goavec-Merou
  */
 
-class SPIInterface {
+class FlashDataSection;
+
+class FlashInterface {
  public:
-	SPIInterface();
-	SPIInterface(const std::string &filename, int8_t verbose,
+	FlashInterface();
+	FlashInterface(const std::string &filename, int8_t verbose,
 			uint32_t rd_burst, bool verify, bool skip_load_bridge = false,
 			bool skip_reset = false);
-	virtual ~SPIInterface() {}
+	virtual ~FlashInterface() {}
 
 	bool detect_flash();
 	bool protect_flash(uint32_t len);
@@ -48,6 +50,9 @@ class SPIInterface {
 	 */
 	bool write(uint32_t offset, const uint8_t *data, uint32_t len,
 		bool unprotect_flash);
+
+	bool write(const std::vector<FlashDataSection>&sections,
+		bool unprotect_flash, bool full_erase=false);
 
 	/*!
 	 * \brief read flash offset byte starting at base_addr and
@@ -109,6 +114,10 @@ class SPIInterface {
 	 */
 	virtual bool prepare_flash_access() {return false;}
 	/*!
+	 * \brief restore frequency after flash ID read
+	 */
+	virtual void restore_flash_access_frequency() {}
+	/*!
 	 * \brief end of SPI flash access
 	 */
 	virtual bool post_flash_access() {return false;}
@@ -122,4 +131,4 @@ class SPIInterface {
  private:
 	std::string _spif_filename;
 };
-#endif  // SRC_SPIINTERFACE_HPP_
+#endif  // SRC_FLASHINTERFACE_HPP_

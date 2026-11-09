@@ -44,6 +44,7 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x06e5d093, {"xilinx", "xc2c",     "xc2c64a",   8}},
 	{0x06e5e093, {"xilinx", "xc2c",     "xc2c64a",   8}},
 	{0x06e1c093, {"xilinx", "xc2c",     "xc2c32a",   8}},
+	{0x16d4a093, {"xilinx", "xc2c",     "xc2c256",   8}},
 
 	/* Xilinx XC9 */
 	{0x09602093, {"xilinx", "xc9500xl", "xc9536xl",  8}},
@@ -72,11 +73,13 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x037c4093, {"xilinx", "spartan7", "xc7s25",          6}},
 	{0x0362f093, {"xilinx", "spartan7", "xc7s50",          6}},
 	{0x037c8093, {"xilinx", "spartan7", "xc7s75",          6}},
+	{0x037c7093, {"xilinx", "spartan7", "xc7s100",         6}},
 
 	/* Xilinx Virtex6 */
 	{0x8424a093, {"xilinx", "virtex6", "xc6vlx130t", 10}},
 
 	/* Xilinx 7-Series / Artix7 */
+	{0x037c3093, {"xilinx", "artix a7 12t",  "xc7a12t", 6}},
 	{0x0362e093, {"xilinx", "artix a7 15t",  "xc7a15",  6}},
 	{0x037c2093, {"xilinx", "artix a7 25t",  "xc7a25",  6}},
 	{0x0362D093, {"xilinx", "artix a7 35t",  "xc7a35",  6}},
@@ -89,15 +92,29 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x03647093, {"xilinx", "kintex7", "xc7k70t",  6}},
 	{0x0364c093, {"xilinx", "kintex7", "xc7k160t", 6}},
 	{0x03651093, {"xilinx", "kintex7", "xc7k325t", 6}},
+	{0x03747093, {"xilinx", "kintex7", "xc7k355t", 6}},
 	{0x03656093, {"xilinx", "kintex7", "xc7k410t", 6}},
 	{0x23752093, {"xilinx", "kintex7", "xc7k420t", 6}},
 	{0x23751093, {"xilinx", "kintex7", "xc7k480t", 6}},
 
 	/* Xilinx 7-Series / Virtex7 */
-	{0x03667093, {"xilinx", "virtex7", "xc7vx330t",  6}},
-	{0x33691093, {"xilinx", "virtex7", "xc7vx690t",  6}},
+	{0x03671093, {"xilinx", "virtex7", "xc7v585t",    6}},
+	{0x03667093, {"xilinx", "virtex7", "xc7vx330t",   6}},
+	{0x03682093, {"xilinx", "virtex7", "xc7vx415t",   6}},
+	{0x03687093, {"xilinx", "virtex7", "xc7vx485t",   6}},
+	{0x03692093, {"xilinx", "virtex7", "xc7vx550t",   6}},
+	{0x33691093, {"xilinx", "virtex7", "xc7vx690t",   6}},
+	{0x03696093, {"xilinx", "virtex7", "xc7vx980t",   6}},
+
+	{0x036d9093, {"xilinx", "virtex7", "xc7vh580t",  22}},
+
+	{0x036b3093, {"xilinx", "virtex7", "xc7v2000t",  24}},
+	{0x036d5093, {"xilinx", "virtex7", "xc7vx1140t", 24}},
+
+	{0x036db093, {"xilinx", "virtex7", "xc7vh870t",  38}},
 
 	/* Xilinx 7-Series / Zynq */
+	{0x13723093, {"xilinx", "zynq",     "xc7z007s", 6}},
 	{0x03722093, {"xilinx", "zynq",     "xc7z010", 6}},
 	{0x03727093, {"xilinx", "zynq",     "xc7z020", 6}},
 	{0x1372c093, {"xilinx", "zynq",     "xc7z030", 6}},
@@ -108,22 +125,68 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x13823093, {"xilinx", "kintexus", "xcku035", 6}},
 	{0x13822093, {"xilinx", "kintexus", "xcku040", 6}},
 	{0x13919093, {"xilinx", "kintexus", "xcku060", 6}},
+	{0x23844093, {"xilinx", "kintexus", "xcku095", 6}},
 	{0x1390d093, {"xilinx", "kintexus", "xcku115", 6}},
 
 	/* Xilinx Ultrascale / Virtex */
 	{0x03842093, {"xilinx", "virtexus", "xcvu095", 6}},
 
 	/* Xilinx Ultrascale+ / Artix */
-	{0x04AC2093, {"xilinx", "artixusp", "xcau15p", 6}},
-	{0x04A64093, {"xilinx", "artixusp", "xcau25p", 6}},
+	{0x04AF6093, {"xilinx", "artixusp",  "xcau7p",  6}},
+	{0x04AC4033, {"xilinx", "artixusp",  "xcau10p", 6}},
+	{0x04AC4093, {"xilinx", "artixusp",  "xcau10p", 6}},
+	{0x04AC2093, {"xilinx", "artixusp",  "xcau15p", 6}},
+	{0x04A65093, {"xilinx", "artixusp",  "xcau20p", 6}},
+	{0x04A64093, {"xilinx", "artixusp",  "xcau25p", 6}},
 
 	/* Xilinx Ultrascale+ / Kintex */
-	{0x04a63093, {"xilinx", "kintexusp", "xcku3p", 6}},
-	{0x04a62093, {"xilinx", "kintexusp", "xcku5p", 6}},
+	{0x04A63093, {"xilinx", "kintexusp", "xcku3p",  6}},
+	{0x04A62093, {"xilinx", "kintexusp", "xcku5p",  6}},
+	{0x0484A093, {"xilinx", "kintexusp", "xcku9p",  6}},
+	{0x04A4E093, {"xilinx", "kintexusp", "xcku11p", 6}},
+	{0x04A51093, {"xilinx", "kintexusp", "xcku11p", 6}},
+	{0x04A52093, {"xilinx", "kintexusp", "xcku13p", 6}},
+	{0x04A56093, {"xilinx", "kintexusp", "xcku15p", 6}},
+	{0x04A59093, {"xilinx", "kintexusp", "xcku15p", 6}},
+	{0x04ACF093, {"xilinx", "kintexusp", "xcku19p", 6}},
+	{0x04AD3093, {"xilinx", "kintexusp", "xcku19p", 6}},
 
 	/* Xilinx Ultrascale+ / Virtex */
-	{0x04b31093, {"xilinx", "virtexusp", "xcvu9p",  18}},
-	{0x14b79093, {"xilinx", "virtexusp", "xcvu37p", 18}},
+	{0x04AEA093, {"xilinx", "virtexusp", "xcvu2p",  6}},
+	{0x04B39093, {"xilinx", "virtexusp", "xcvu3p",  6}},
+	{0x04B3D093, {"xilinx", "virtexusp", "xcvu3p",  6}},
+
+	{0x04B2B093, {"xilinx", "virtexusp", "xcvu5p",  12}},
+	{0x04B2F093, {"xilinx", "virtexusp", "xcvu5p",  12}},
+	{0x04B29093, {"xilinx", "virtexusp", "xcvu7p",  12}},
+	{0x04B2D093, {"xilinx", "virtexusp", "xcvu7p",  12}},
+	{0x14B29093, {"xilinx", "virtexusp", "xcvu7p",  12}},
+
+	{0x04B31093, {"xilinx", "virtexusp", "xcvu9p",  18}},
+	{0x14B31093, {"xilinx", "virtexusp", "xcvu9p",  18}},
+	{0x04B35093, {"xilinx", "virtexusp", "xcvu9p",  18}},
+	{0x14B79093, {"xilinx", "virtexusp", "xcvu37p", 18}},
+	{0x04B49093, {"xilinx", "virtexusp", "xcvu11p", 18}},
+	{0x04B4F093, {"xilinx", "virtexusp", "xcvu11p", 18}},
+
+	{0x04B51093, {"xilinx", "virtexusp", "xcvu13p", 24}},
+	{0x04B55093, {"xilinx", "virtexusp", "xcvu13p", 24}},
+
+	{0x04BA3093, {"xilinx", "virtexusp", "xcvu15p", 24}},
+	{0x04BA1093, {"xilinx", "virtexusp", "xcvu19p", 24}},
+	{0x04BA5093, {"xilinx", "virtexusp", "xcvu19p", 24}},
+
+	/* Xilinx Ultrascale+ / Spartan */
+	{0x04E81093, {"xilinx", "spartanusp", "xcsu10p",  6}},
+	{0x04E82093, {"xilinx", "spartanusp", "xcsu25p",  6}},
+	{0x04E80093, {"xilinx", "spartanusp", "xcsu35p",  6}},
+	{0x04EB1093, {"xilinx", "spartanusp", "xcsu45p",  6}},
+	{0x04E90093, {"xilinx", "spartanusp", "xcsu55p",  6}},
+	{0x04EB2093, {"xilinx", "spartanusp", "xcsu60p",  6}},
+	{0x04E99093, {"xilinx", "spartanusp", "xcsu65p",  6}},
+	{0x04E98093, {"xilinx", "spartanusp", "xcsu100p", 6}},
+	{0x04EA1093, {"xilinx", "spartanusp", "xcsu150p", 6}},
+	{0x04EA0093, {"xilinx", "spartanusp", "xcsu200p", 6}},
 
 	/* Xilinx Ultrascale+ / ZynqMP */
 	/* When powering a zynq ultrascale+ MPSoC, PL Tap and ARM dap
@@ -177,15 +240,31 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x047fb093, {"xilinx", "zynqmp",      "xczu48dr", 6}},
 	{0x047fe093, {"xilinx", "zynqmp",      "xczu49dr", 6}},
 
+	/* Xilinx Kria PL: these Devices are based on zynqmp
+	 * so we keep family
+	 */
+	{0x08e24126, {"xilinx", "zynqmp_cfgn", "xck24",    4}},
+	{0x08e48126, {"xilinx", "zynqmp_cfgn", "xck26",    4}},
+
+	{0x04712093, {"xilinx", "zynqmp",      "xck24",    6}},
+	{0x04724093, {"xilinx", "zynqmp",      "xck26",    6}},
+
 	/**************************************************************************/
 	/*                             Altera                                     */
 	/**************************************************************************/
 
 	/* Altera Max II*/
 	{0x020a10dd, {"altera", "max II", "EPM240T100C5N", 10}},
+	{0x020a40dd, {"altera", "max II", "EPM2210",       10}},
 
 	/* Altera Cyclone II/III/IV/10 LP */
 	{0x020b10dd, {"altera", "cyclone II",           "EP2C5",                         10}},
+	{0x020b20dd, {"altera", "cyclone II",           "EP2C8",                         10}},
+	{0x020b30dd, {"altera", "cyclone II",           "EP2C15",                        10}},
+	{0x020b30dd, {"altera", "cyclone II",           "EP2C20",                        10}},
+	{0x020b40dd, {"altera", "cyclone II",           "EP2C35",                        10}},
+	{0x020b50dd, {"altera", "cyclone II",           "EP2C50",                        10}},
+	{0x020b60dd, {"altera", "cyclone II",           "EP2C70",                        10}},
 	{0x020f10dd, {"altera", "cyclone III/IV/10 LP", "EP3C5/EP3C10/EP4CE6/EP4CE10",   10}},
 	{0x020f20dd, {"altera", "cyclone III/IV/10 LP", "EP3C16/EP4CE15/10CL016",        10}},
 	{0x020f30dd, {"altera", "cyclone III/IV/10 LP", "EP3C25/EP4CE22/10CL025",        10}},
@@ -216,13 +295,42 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x031810dd, {"altera", "MAX 10", "10M02S", 10}},
 	{0x031820dd, {"altera", "MAX 10", "10M08S", 10}},
 	{0x031830dd, {"altera", "MAX 10", "10M16S", 10}},
+	{0x031840dd, {"altera", "MAX 10", "10M25S", 10}},
 	{0x0318d0dd, {"altera", "MAX 10", "10M40S", 10}},
 	{0x031850dd, {"altera", "MAX 10", "10M50S", 10}},
 	/** dual-supply **/
+    {0x031030dd, {"altera", "MAX 10", "10M16D", 10}},
 	{0x031050dd, {"altera", "MAX 10", "10M50D", 10}},
 
 	/* Altera Stratix V */
 	{0x029070dd, {"altera", "stratix V GS", "5SGSD5", 10}},
+
+	/* Altera/Intel Arria 10 */
+	{0x02ee20dd, {"altera", "arria 10", "GX160",  10}},
+	{0x02e220dd, {"altera", "arria 10", "GX220",  10}},
+	{0x02ee30dd, {"altera", "arria 10", "GX270",  10}},
+	{0x02e230dd, {"altera", "arria 10", "GX320",  10}},
+	{0x02e240dd, {"altera", "arria 10", "GX480",  10}},
+	{0x02ee50dd, {"altera", "arria 10", "GX570",  10}},
+	{0x02e250dd, {"altera", "arria 10", "GX660",  10}},
+	{0x02ee60dd, {"altera", "arria 10", "GX900",  10}},
+	{0x02e660dd, {"altera", "arria 10", "GX1150", 10}},
+	{0x02e260dd, {"altera", "arria 10", "GT900",  10}},
+	{0x02e060dd, {"altera", "arria 10", "GT1150", 10}},
+	{0x02e620dd, {"altera", "arria 10", "SX160",  10}},
+	{0x02e020dd, {"altera", "arria 10", "SX220",  10}},
+	{0x02e630dd, {"altera", "arria 10", "SX270",  10}},
+	{0x02e030dd, {"altera", "arria 10", "SX320",  10}},
+	{0x02e040dd, {"altera", "arria 10", "SX480",  10}},
+	{0x02e650dd, {"altera", "arria 10", "SX570",  10}},
+	{0x02e050dd, {"altera", "arria 10", "SX660",  10}},
+
+	/* Altera Agilex 3 */
+	{0x4361b0dd, {"altera", "agilex 3", "A3CY100", 10}},
+	{0x436db0dd, {"altera", "agilex 3", "A3CZ135", 10}},
+
+	/* Altera Agilex 5 */
+	{0x4369c0dd, {"altera", "agilex 5", "A5EC008B",  10}},
 
 	/**************************************************************************/
 	/*                             Efinix                                     */
@@ -239,6 +347,7 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x00360a79, {"efinix", "Titanium", "Ti60ES",           5}},
 	{0x00661a79, {"efinix", "Titanium", "Ti35",             5}},
 	{0x00690a79, {"efinix", "Titanium", "Ti180",            5}},
+	{0x006a0a79, {"efinix", "Titanium", "Ti375",            5}},
 
 	/**************************************************************************/
 	/*                             Lattice                                    */
@@ -248,56 +357,55 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 	{0x0129a043, {"lattice", "XP2", "LFXP2-8E", 8}},
 
 	/* Lattice MachXO2 */
-	{0x012b0043, {"lattice", "MachXO2", "LCMXO2-256ZE", 8}},
-	{0x012b1043, {"lattice", "MachXO2", "LCMXO2-640ZE", 8}},
-	{0x012b2043, {"lattice", "MachXO2", "LCMXO2-1200ZE", 8}},
-	{0x012b3043, {"lattice", "MachXO2", "LCMXO2-2000ZE", 8}},
-	{0x012b4043, {"lattice", "MachXO2", "LCMXO2-4000ZE", 8}},
-	{0x012b5043, {"lattice", "MachXO2", "LCMXO2-7000ZE", 8}},
-	{0x012b8043, {"lattice", "MachXO2", "LCMXO2-256HC", 8}},
-	{0x012b9043, {"lattice", "MachXO2", "LCMXO2-640HC", 8}},
-	{0x012ba043, {"lattice", "MachXO2", "LCMXO2-1200HC", 8}},
-	{0x012ba043, {"lattice", "MachXO2", "LCMXO2-640UHC", 8}},
-	{0x012bb043, {"lattice", "MachXO2", "LCMXO2-2000HC", 8}},
-	{0x012bb043, {"lattice", "MachXO2", "LCMXO2-1200UHC", 8}},
-	{0x012bc043, {"lattice", "MachXO2", "LCMXO2-4000HC", 8}},
-	{0x012bc043, {"lattice", "MachXO2", "LCMXO2-2000UHC", 8}},
-	{0x012bd043, {"lattice", "MachXO2", "LCMXO2-7000HC", 8}},
+	{0x012b0043, {"lattice", "MachXO2", "LCMXO2-256ZE",                 8}},
+	{0x012b1043, {"lattice", "MachXO2", "LCMXO2-640ZE",                 8}},
+	{0x012b2043, {"lattice", "MachXO2", "LCMXO2-1200ZE",                8}},
+	{0x012b3043, {"lattice", "MachXO2", "LCMXO2-2000ZE/LCMXO2-2000HE",  8}},
+	{0x012b4043, {"lattice", "MachXO2", "LCMXO2-4000ZE/LCMXO2-4000HE/LCMXO2-2000UHE", 8}},
+	{0x012b5043, {"lattice", "MachXO2", "LCMXO2-7000ZE/LCMXO2-7000HE",  8}},
+	{0x012b8043, {"lattice", "MachXO2", "LCMXO2-256HC",                 8}},
+	{0x012b9043, {"lattice", "MachXO2", "LCMXO2-640HC",                 8}},
+	{0x012ba043, {"lattice", "MachXO2", "LCMXO2-1200HC/LCMXO2-640UHC",  8}},
+	{0x012bb043, {"lattice", "MachXO2", "LCMXO2-2000HC/LCMXO2-1200UHC", 8}},
+	{0x012bc043, {"lattice", "MachXO2", "LCMXO2-4000HC/LCMXO2-2000UHC", 8}},
+	{0x012bd043, {"lattice", "MachXO2", "LCMXO2-7000HC/LCMXO2-4000UHC", 8}},
 
 	/* Lattice MachXO3 */
-	{0x412b2043, {"lattice", "MachXO3L", "LCMXO3L-1300E", 8}},
-	{0x412b3043, {"lattice", "MachXO3L", "LCMXO3L-2100E", 8}},
+	{0xc12b2043, {"lattice", "MachXO3L", "LCMXO3L-640E", 8}},
+	{0x412b2043, {"lattice", "MachXO3L", "LCMXO3L-1300E-WLCSP36/CSFBGA121", 8}},
+	{0xc12b3043, {"lattice", "MachXO3L", "LCMXO3L-1300E-CSFBGA256",         8}},
+	{0x412b3043, {"lattice", "MachXO3L", "LCMXO3L-2100E-WLCSP49/CSFBGA121/CSFBGA256", 8}},
+	{0xc12b4043, {"lattice", "MachXO3L", "LCMXO3L-2100E-CSFBGA324",                   8}},
 	{0x412b4043, {"lattice", "MachXO3L", "LCMXO3L-4300E", 8}},
 	{0x412b5043, {"lattice", "MachXO3L", "LCMXO3L-6900E", 8}},
 	{0x412b6043, {"lattice", "MachXO3L", "LCMXO3L-9400E", 8}},
-	{0x412bb043, {"lattice", "MachXO3L", "LCMXO3L-2100C", 8}},
-	{0x412bc043, {"lattice", "MachXO3L", "LCMXO3L-4300C", 8}},
+	{0xc12bb043, {"lattice", "MachXO3L", "LCMXO3L-1300C", 8}},
+	{0x412bb043, {"lattice", "MachXO3L", "LCMXO3L-2100C-CABGA256", 8}},
+	{0xc12bc043, {"lattice", "MachXO3L", "LCMXO3L-2100C-CABGA324", 8}},
+	{0x412bc043, {"lattice", "MachXO3L", "LCMXO3L-4300C-CABGA256/CABGA324", 8}},
+	{0xc12bd043, {"lattice", "MachXO3L", "LCMXO3L-4300C-CABGA400",          8}},
 	{0x412bd043, {"lattice", "MachXO3L", "LCMXO3L-6900C", 8}},
 	{0x412be043, {"lattice", "MachXO3L", "LCMXO3L-9400C", 8}},
-	{0xc12b2043, {"lattice", "MachXO3L", "LCMXO3L-640E", 8}},
-	{0xc12b3043, {"lattice", "MachXO3L", "LCMXO3L-1300E", 8}},
-	{0xc12b4043, {"lattice", "MachXO3L", "LCMXO3L-2100E", 8}},
-	{0xc12bb043, {"lattice", "MachXO3L", "LCMXO3L-1300C", 8}},
-	{0xc12bc043, {"lattice", "MachXO3L", "LCMXO3L-2100C", 8}},
-	{0xc12bd043, {"lattice", "MachXO3L", "LCMXO3L-4300C", 8}},
 
-	{0x612b2043, {"lattice", "MachXO3LF", "LCMXO3LF-1300E", 8}},
-	{0x612b3043, {"lattice", "MachXO3LF", "LCMXO3LF-2100E", 8}},
+	{0xe12b2043, {"lattice", "MachXO3LF", "LCMXO3LF-640E",  8}},
+	{0x612b2043, {"lattice", "MachXO3LF", "LCMXO3LF-1300E-WLCSP36/CSFBGA121", 8}},
+	{0xe12b3043, {"lattice", "MachXO3LF", "LCMXO3LF-1300E-CSFBGA256",         8}},
+	{0x612b3043, {"lattice", "MachXO3LF", "LCMXO3LF-2100E-WLCSP49/CSFBGA121/CSFBGA256", 8}},
+	{0xe12b4043, {"lattice", "MachXO3LF", "LCMXO3LF-2100E-CSFBGA324",                   8}},
 	{0x612b4043, {"lattice", "MachXO3LF", "LCMXO3LF-4300E", 8}},
 	{0x612b5043, {"lattice", "MachXO3LF", "LCMXO3LF-6900E", 8}},
 	{0x612b6043, {"lattice", "MachXO3LF", "LCMXO3LF-9400E", 8}},
-	{0x612bb043, {"lattice", "MachXO3LF", "LCMXO3LF-2100C", 8}},
-	{0x612bc043, {"lattice", "MachXO3LF", "LCMXO3LF-4300C", 8}},
+	{0xe12bb043, {"lattice", "MachXO3LF", "LCMXO3LF-1300C", 8}},
+	{0x612bb043, {"lattice", "MachXO3LF", "LCMXO3LF-2100C-CABGA256", 8}},
+	{0xe12bc043, {"lattice", "MachXO3LF", "LCMXO3LF-2100C-CABGA324", 8}},
+	{0x612bc043, {"lattice", "MachXO3LF", "LCMXO3LF-4300C-CABGA256/CABGA324", 8}},
+	{0xe12bd043, {"lattice", "MachXO3LF", "LCMXO3LF-4300C-CABGA400",          8}},
 	{0x612bd043, {"lattice", "MachXO3LF", "LCMXO3LF-6900C", 8}},
 	{0x612be043, {"lattice", "MachXO3LF", "LCMXO3LF-9400C", 8}},
-	{0xe12b2043, {"lattice", "MachXO3LF", "LCMXO3LF-640E", 8}},
-	{0xe12b3043, {"lattice", "MachXO3LF", "LCMXO3LF-1300E", 8}},
-	{0xe12b4043, {"lattice", "MachXO3LF", "LCMXO3LF-2100E", 8}},
-	{0xe12bb043, {"lattice", "MachXO3LF", "LCMXO3LF-1300C", 8}},
-	{0xe12bc043, {"lattice", "MachXO3LF", "LCMXO3LF-2100C", 8}},
-	{0xe12bd043, {"lattice", "MachXO3LF", "LCMXO3LF-4300C", 8}},
 
-	{0x012e3043, {"lattice", "MachXO3D", "LCMX03D-9400HC", 8}},
+	{0x012e2043, {"lattice", "MachXO3D", "LCMXO3D-4300HC/LCMXO3D-4300ZC", 8}},
+	{0x212e3043, {"lattice", "MachXO3D", "LCMXO3D-9400HC/LCMXO3D-9400ZC", 8}},
+	{0x212e1043, {"lattice", "MachXO3D", "LCMXO3D-9400HE",                8}},
 
 	/* Lattice ECP3 */
 	{0x01014043, {"lattice", "ECP3", "LFE3-70E",    8}},
@@ -346,6 +454,7 @@ static std::map <uint32_t, fpga_model> fpga_list = {
 
 	/* Gowin GW5 */
 	{0x0001081b, {"Gowin", "GW5AST", "GW5AST-138", 8}},
+	{0x0001681b, {"Gowin", "GW5AT",  "GW5AT-15",   8}},
 	{0x0001481b, {"Gowin", "GW5AT",  "GW5AT-60",   8}},
 	{0x0001181b, {"Gowin", "GW5AT",  "GW5AT-138",  8}},
 	{0x0001281b, {"Gowin", "GW5A",   "GW5A-25",    8}},
